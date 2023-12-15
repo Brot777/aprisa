@@ -68,6 +68,7 @@ export const getBasicData = async (req, res) => {
 
       let finactual;
 
+      console.log(est_nombre);
       arrayDataEstacion.forEach((maquina) => {
         /* INICIAL DATA MAQUINA */
         const {
@@ -87,6 +88,7 @@ export const getBasicData = async (req, res) => {
         alertasEstacion = alertasEstacion + alerta;
 
         /* console.log(maquina); */
+        /*   console.log({ opest_hff, opest_hii }); */
 
         //suma cantidad proyectada del dia y por estacion
         cantidadProyectadaTotalEstacion += Number(opest_cantp);
@@ -144,7 +146,7 @@ export const getBasicData = async (req, res) => {
         horase = (horase / speed) * 100;
 
         //calculo de tiempo muerto (TIMEOUT)
-        if (opest_hii < finactual) {
+        if (!finactual) {
           finactual = opest_hii;
         }
 
@@ -162,8 +164,8 @@ export const getBasicData = async (req, res) => {
           muerto = 0;
         } //muerto 7.5hrs turno
         totalmuerto = totalmuerto + muerto;
-        muerto = 0;
         finactual = opest_hff;
+
         // fin calculo tiempo muerto
 
         //calculos eficiencia
@@ -262,10 +264,6 @@ export const getBasicData = async (req, res) => {
       porcetajeProduccionPorEstacion =
         porcetajeProduccionPorEstacion.toFixed(2);
 
-      //VARIABLES TIEMPO MUERTO DESPUES DE RETURN ANTES DE FIN DE WHITE
-
-      totalmuerto = 0;
-
       //
       /* eficienciadiaria = eficienciadiaria * cantrealtotal;
       eficienciaplantasuma = eficienciaplantasuma + eficienciadiaria; */
@@ -307,34 +305,30 @@ export const getBasicData = async (req, res) => {
   }
 };
 
-export const getProductionTrend = async (req, res) => {
+export const getProductionMonth = async (req, res) => {
   const fecha =
     req.query.fecha || moment().tz("America/Guatemala").format("MM/DD/YYYY");
-  res.status(200).json({ msg: "succes" });
-  const [month, day, year] = fecha.split("/");
-  const pool = await getConnection();
-  const dataEstacion = await pool
-    .request()
-    .input("fecha", sql.NVarChar, fecha)
-    .input("", sql.NVarChar, fecha)
-    .query(
-      `SELECT * FROM opestxestacion WHERE  opest_fecha=@fecha and @edad_param BETWEEN edad_limite_inferior AND edad_limite_superior order by prioridad, opest_id ASC`
-    );
-};
-
-const vistaEstacion = async (req, res) => {
-  const fecha = req.query.fecha || convertToShortDate(new Date());
-  const estacionId = req.params.id;
+  console.log({ fecha });
   try {
     const pool = await getConnection();
-    const data = await pool
+    const dataProduccion = await pool
       .request()
       .input("fecha", sql.NVarChar, fecha)
       .query(
-        `SELECT * FROM opestxestacion WHERE  opest_fecha=@fecha and est_id=${9} order by prioridad, opest_id ASC`
-      ); // Cambio aquí
-    console.log(data);
-    res.render("index", { data });
+        `SELECT DAY(opest_fecha) as dia,opest_fecha, MONTH(opest_fecha) as month, SUM(CONVERT(INT, opest_cantr)) as produccionDia FROM opestxestacion WHERE MONTH(opest_fecha)=MONTH(@fecha) AND YEAR(opest_fecha)=YEAR(@fecha) GROUP BY opest_fecha`
+      );
+    const dataProyectado = await pool
+      .request()
+      .input("fecha", sql.NVarChar, fecha)
+      .query(
+        `SELECT SUM(CONVERT(INT, opest_cantp)) as produccionProyectadaMes FROM opestxestacion WHERE MONTH(opest_fecha)=MONTH(@fecha) AND YEAR(opest_fecha)=YEAR(@fecha)`
+      );
+    const produccionMesPorDia = dataProduccion.recordset.map((dataDia) => {
+      return dataDia.produccionDia ? dataDia : { ...dataDia, produccionDia: 0 };
+    });
+    const { produccionProyectadaMes } = dataProyectado.recordsets[0][0];
+
+    res.json({ produccionMesPorDia, produccionProyectadaMes });
   } catch (error) {
     console.error("Error en la consulta SQL:", error);
     res.status(500).send("Error en la base de datos");

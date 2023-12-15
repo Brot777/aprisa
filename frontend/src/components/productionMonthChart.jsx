@@ -1,30 +1,31 @@
-import { ResponsiveLine } from "@nivo/line";
+import { ResponsiveBar } from "@nivo/bar";
 import { useTheme } from "@mui/material";
-import { useState } from "react";
 
-const OverviewChart = ({
+const ProductionMonthChart = ({
   isDashboard = false,
   view,
   data,
   isLoading = true,
 }) => {
-  console.log(data);
   const theme = useTheme();
 
   if (!data || isLoading) return "Loading...";
 
-  const arrayEficiencias = data.map((produccion, index) => {
+  /* const arrayEficiencias = data.map((produccion, index) => {
     return { x: index + ":00", y: produccion };
   });
   const dataGrafica = {
-    id: "totalUnits",
+    id: "trendProduction",
     color: theme.palette.secondary[600],
     data: arrayEficiencias,
   };
-
+ */
+  console.log(data);
   return (
-    <ResponsiveLine
-      data={[dataGrafica]}
+    <ResponsiveBar
+      data={data}
+      keys={["produccionDia"]}
+      indexBy="dia"
       theme={{
         axis: {
           domain: {
@@ -58,8 +59,10 @@ const OverviewChart = ({
           },
         },
       }}
-      margin={{ top: 20, right: 50, bottom: 50, left: 70 }}
-      xScale={{ type: "point" }}
+      margin={{ top: 20, right: 20, bottom: 50, left: 50 }}
+      valueScale={{ type: "linear" }}
+      indexScale={{ type: "band", round: false }}
+      enableLabel={false}
       yScale={{
         type: "linear",
         min: "auto",
@@ -80,9 +83,9 @@ const OverviewChart = ({
         orient: "bottom",
         tickSize: 5,
         tickPadding: 5,
-        tickRotation: 0,
-        legend: isDashboard ? "" : "Month",
-        legendOffset: 36,
+        tickRotation: -70,
+        legend: "Dia",
+        legendOffset: 45,
         legendPosition: "middle",
       }}
       axisLeft={{
@@ -99,7 +102,7 @@ const OverviewChart = ({
       }}
       enableGridX={false}
       enableGridY={false}
-      pointSize={10}
+      pointSize={8}
       pointColor={{ theme: "background" }}
       pointBorderWidth={2}
       pointBorderColor={{ from: "serieColor" }}
@@ -139,4 +142,4 @@ const OverviewChart = ({
   );
 };
 
-export default OverviewChart;
+export default ProductionMonthChart;

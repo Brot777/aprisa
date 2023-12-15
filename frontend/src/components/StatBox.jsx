@@ -6,46 +6,42 @@ const StatBox = ({ title, value, increase, icon, description }) => {
   const theme = useTheme();
   return (
     <Box
-      gridColumn="span 2"
+      gridColumn="span 1"
       gridRow="span 1"
       display="flex"
       flexDirection="column"
-      justifyContent="space-between"
+      justifyContent="center"
+      alignItems="center"
+      gap="15px"
       p="1.25rem 1rem"
       flex="1 1 100%"
       backgroundColor={theme.palette.background.alt}
       borderRadius="0.55rem"
     >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "start",
-        }}
-      >
-        <Typography variant="h6" sx={{ color: theme.palette.secondary[100] }}>
-          {title}
-        </Typography>
-        {icon}
-      </div>
-
+      {icon}
       <Typography
         variant="h3"
         fontWeight="600"
+        align="center"
         sx={{ color: theme.palette.secondary[200] }}
       >
         {value}
       </Typography>
-      <FlexBetween gap="1rem">
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
         <Typography
-          variant="h5"
-          fontStyle="italic"
-          sx={{ color: theme.palette.secondary.light }}
+          variant="h6"
+          textAlign="center"
+          sx={{ color: theme.palette.secondary[100] }}
         >
-          {increase}
+          {title}
         </Typography>
-        <Typography>{description}</Typography>
-      </FlexBetween>
+      </div>
     </Box>
   );
 };

@@ -11,6 +11,12 @@ export const api = createApi({
       providesTags: ["basicData"],
       keepUnusedDataFor: 0,
     }),
+    getProductionMonth: build.query({
+      query: (dateToday) =>
+        `dashboard/production-month${dateToday ? `?fecha=${dateToday}` : ""}`,
+      providesTags: ["basicData"],
+      keepUnusedDataFor: 0,
+    }),
     getUser: build.query({
       query: (id) => `general/user/${id}`,
       providesTags: ["User"],
@@ -66,4 +72,5 @@ export const {
   useGetDashboardQuery,
   useGetBasicDataQuery,
   useLazyGetBasicDataQuery,
+  useLazyGetProductionMonthQuery,
 } = api;

@@ -7,9 +7,13 @@ import TodayIcon from "@mui/icons-material/Today";
 import { Box, Typography, useTheme, useMediaQuery } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import BreakdownChart from "./../../components/BreakdownChart";
-import OverviewChart from "./../../components/OverviewChart";
-import { useLazyGetBasicDataQuery } from "./../../state/api";
+import TrendChart from "../../components/trendChart";
+import {
+  useLazyGetBasicDataQuery,
+  useLazyGetProductionMonthQuery,
+} from "./../../state/api";
 import StatBox from "./../../components/StatBox";
+import ProductionMonthChart from "../../components/productionMonthChart";
 
 const Dashboard = () => {
   //estado de la fechca
@@ -18,6 +22,11 @@ const Dashboard = () => {
   const isNonMediumScreens = useMediaQuery("(min-width: 1200px)");
 
   const [getDataDashborad, { data, isLoading }] = useLazyGetBasicDataQuery();
+  const [
+    getDataProductionMonth,
+    { data: dataProductionMonth, isLoading: isLoadingProductionMonth },
+  ] = useLazyGetProductionMonthQuery();
+
   const fechingData = async () => {
     let dateFormat = dateToday;
     if (dateToday) {
@@ -26,6 +35,7 @@ const Dashboard = () => {
       console.log(dateFormat);
     }
     getDataDashborad(dateFormat);
+    getDataProductionMonth(dateFormat);
   };
 
   let porcentajeAvanceDia = "0%";
@@ -85,7 +95,7 @@ const Dashboard = () => {
         mt="20px"
         display="grid"
         gridTemplateColumns="repeat(12, 1fr)"
-        gridAutoRows="160px"
+        gridAutoRows="190px"
         gap="20px"
         sx={{
           "& > div": { gridColumn: isNonMediumScreens ? undefined : "span 12" },
@@ -94,7 +104,9 @@ const Dashboard = () => {
         {/* ROW 1 */}
         <StatBox
           title="Unidades producidas por hora"
-          value={data ? data.cantidadProyectadaDia : "0"}
+          value={
+            data ? (Number(data.cantidadProducidaDia) / 24).toFixed(0) : "0"
+          }
           icon={
             <Update
               sx={{ color: theme.palette.secondary[300], fontSize: "26px" }}
@@ -102,13 +114,13 @@ const Dashboard = () => {
           }
         />
         <Box
-          gridColumn="span 6"
+          gridColumn="span 7"
           gridRow="span 1"
           backgroundColor={theme.palette.background.alt}
           p="1rem"
           borderRadius="0.55rem"
         >
-          <OverviewChart
+          <TrendChart
             view="sales"
             isDashboard={true}
             data={data ? data.tendenciaProduccionPorHora : []}
@@ -117,11 +129,7 @@ const Dashboard = () => {
         </Box>
         <StatBox
           title="Maquinas activas"
-          value={
-            data
-              ? data.totalMaquinasActivas || data.sumaryByStation.length
-              : "0"
-          }
+          value={data ? data.sumaryByStation.length : "0"}
           icon={
             <RadioButtonChecked
               sx={{ color: theme.palette.secondary[300], fontSize: "26px" }}
@@ -129,7 +137,7 @@ const Dashboard = () => {
           }
         />
         <Box
-          gridColumn="span 2"
+          gridColumn="span 3"
           gridRow="span 5"
           backgroundColor={theme.palette.background.alt}
           p="1rem"
@@ -138,8 +146,12 @@ const Dashboard = () => {
           <h1>Top Maquinas</h1>
         </Box>
         <StatBox
-          title="Unidades solicitadas del dia"
-          value={data ? data.cantidadProducidaDia : "0"}
+          title="Unidades solicitadas del mes"
+          value={
+            dataProductionMonth
+              ? dataProductionMonth.produccionProyectadaMes
+              : "0"
+          }
           icon={
             <TodayIcon
               sx={{ color: theme.palette.secondary[300], fontSize: "26px" }}
@@ -147,21 +159,23 @@ const Dashboard = () => {
           }
         />
         <Box
-          gridColumn="span 6"
-          gridRow="span 2"
+          gridColumn="span 7"
+          gridRow="span 1"
           backgroundColor={theme.palette.background.alt}
           p="1rem"
           borderRadius="0.55rem"
         >
-          <OverviewChart
+          <ProductionMonthChart
             view="sales"
             isDashboard={true}
-            data={data ? data.sumaryByStation : []}
-            isLoading={isLoading}
+            data={
+              dataProductionMonth ? dataProductionMonth.produccionMesPorDia : []
+            }
+            isLoading={isLoadingProductionMonth}
           />
         </Box>
         <StatBox
-          title="% de Avance Unidades de hoy versus proyectado"
+          title="% Unidades de hoy versus proyectado"
           value={porcentajeAvanceDia}
           icon={
             <DataSaverOffIcon
