@@ -1,21 +1,23 @@
 import React, { useEffect, useState } from "react";
-import FlexBetween from "./../../components/FlexBetween";
-import Header from "./../../components/Header";
+import FlexBetween from "../../components/FlexBetween";
+import Header from "../../components/Header";
 import { Update, RadioButtonChecked } from "@mui/icons-material";
 import DataSaverOffIcon from "@mui/icons-material/DataSaverOff";
 import TodayIcon from "@mui/icons-material/Today";
 import { Box, Typography, useTheme, useMediaQuery } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import BreakdownChart from "./../../components/BreakdownChart";
+import BreakdownChart from "../../components/BreakdownChart";
 import TrendChart from "../../components/trendChart";
 import {
   useLazyGetBasicDataQuery,
   useLazyGetProductionMonthQuery,
-} from "./../../state/api";
-import StatBox from "./../../components/StatBox";
+} from "../../state/api";
+import StatBox from "../../components/StatBox";
 import ProductionMonthChart from "../../components/productionMonthChart";
+import PerformanceChart from "../../components/performanceChart";
+import PercentageUnitsProducedChart from "../../components/percentageUnitsProducedChart";
 
-const Dashboard = () => {
+const HomeDashboard = () => {
   //estado de la fechca
   const [dateToday, setDateToday] = useState("");
   const theme = useTheme();
@@ -38,13 +40,59 @@ const Dashboard = () => {
     getDataProductionMonth(dateFormat);
   };
 
-  let porcentajeAvanceDia = "0%";
-  if (data && data?.cantidadProyectadaDia != 0) {
-    porcentajeAvanceDia =
-      ((data.cantidadProducidaDia / data.cantidadProyectadaDia) * 100).toFixed(
-        2
-      ) + "%";
-  }
+  const getAccumulatedData = () => {
+    let porcentajeAvance = "0.00%";
+    let avanceProduccion = 0;
+    let totalProyectadoMes = 0;
+    let totalMaquinas = 0;
+    let promedioProduccionMes = 0;
+    if (!dataProductionMonth)
+      return {
+        promedioProduccionMes,
+        totalMaquinas,
+        totalProyectadoMes,
+        porcentajeAvance,
+      };
+
+    const maxDate = dataProductionMonth.produccionMesPorDia.length;
+    for (let i = 0; i < maxDate; i++) {
+      avanceProduccion +=
+        dataProductionMonth.produccionMesPorDia[i].produccionDia;
+      totalProyectadoMes +=
+        dataProductionMonth.produccionMesPorDia[i].produccionProyectadaDia;
+      totalMaquinas +=
+        dataProductionMonth.produccionMesPorDia[i].CantidadMaquinasDia;
+    }
+
+    totalProyectadoMes != 0 &&
+      (porcentajeAvance =
+        ((avanceProduccion / totalProyectadoMes) * 100).toFixed(2) + "%");
+
+    dataProductionMonth.produccionMesPorDia.length != 0 &&
+      (promedioProduccionMes = (
+        avanceProduccion / dataProductionMonth.produccionMesPorDia.length
+      ).toFixed(0));
+
+    return {
+      promedioProduccionMes,
+      totalMaquinas,
+      totalProyectadoMes,
+      porcentajeAvance,
+    };
+  };
+  const { totalProyectadoMes, porcentajeAvance } = getAccumulatedData();
+
+  const getTopMaquinas = () => {
+    let topMaquinas = [];
+    if (data) {
+      const arrayMaquinas = [...data.sumaryByStation];
+      arrayMaquinas.sort((a, b) => {
+        return Number(b.cantrealtotal) - Number(a.cantrealtotal);
+      });
+      topMaquinas = arrayMaquinas.slice(0, 5);
+    }
+    return topMaquinas;
+  };
 
   const columns = [
     {
@@ -95,7 +143,7 @@ const Dashboard = () => {
         mt="20px"
         display="grid"
         gridTemplateColumns="repeat(12, 1fr)"
-        gridAutoRows="190px"
+        gridAutoRows="200px"
         gap="20px"
         sx={{
           "& > div": { gridColumn: isNonMediumScreens ? undefined : "span 12" },
@@ -103,7 +151,7 @@ const Dashboard = () => {
       >
         {/* ROW 1 */}
         <StatBox
-          title="Unidades producidas por hora"
+          title="Piezas producidas por dia"
           value={
             data ? (Number(data.cantidadProducidaDia) / 24).toFixed(0) : "0"
           }
@@ -120,6 +168,13 @@ const Dashboard = () => {
           p="1rem"
           borderRadius="0.55rem"
         >
+          <Typography
+            variant="h6"
+            sx={{ textAlign: "center" }}
+            color={theme.palette.secondary[400]}
+          >
+            Produccion por hora
+          </Typography>
           <TrendChart
             view="sales"
             isDashboard={true}
@@ -138,20 +193,39 @@ const Dashboard = () => {
         />
         <Box
           gridColumn="span 3"
-          gridRow="span 5"
+          gridRow="span 6"
+          display="flex"
+          flexDirection="column"
+          justifyContent="start"
+          alignItems="center"
+          gap="10px"
+          p="1.25rem 1rem"
+          flex="1 1 100%"
           backgroundColor={theme.palette.background.alt}
-          p="1rem"
           borderRadius="0.55rem"
         >
-          <h1>Top Maquinas</h1>
+          <Typography
+            variant="h3"
+            sx={{ color: theme.palette.secondary[100], textAlign: "center" }}
+          >
+            Top 5 maquinas
+          </Typography>
+
+          <Typography
+            fontSize="0.8rem"
+            sx={{ color: theme.palette.secondary[200], textAlign: "center" }}
+          >
+            Mayor produccion.
+          </Typography>
+          <Box width="100%" mt="20px">
+            {getTopMaquinas().map((maquina, index) => (
+              <BreakdownChart maquina={maquina} key={index} index={index} />
+            ))}
+          </Box>
         </Box>
         <StatBox
-          title="Unidades solicitadas del mes"
-          value={
-            dataProductionMonth
-              ? dataProductionMonth.produccionProyectadaMes
-              : "0"
-          }
+          title="Piezas a producir en el mes"
+          value={totalProyectadoMes}
           icon={
             <TodayIcon
               sx={{ color: theme.palette.secondary[300], fontSize: "26px" }}
@@ -165,6 +239,13 @@ const Dashboard = () => {
           p="1rem"
           borderRadius="0.55rem"
         >
+          <Typography
+            variant="h6"
+            sx={{ textAlign: "center" }}
+            color={theme.palette.secondary[400]}
+          >
+            Piezas producidas en el mes
+          </Typography>
           <ProductionMonthChart
             view="sales"
             isDashboard={true}
@@ -175,8 +256,8 @@ const Dashboard = () => {
           />
         </Box>
         <StatBox
-          title="% Unidades de hoy versus proyectado"
-          value={porcentajeAvanceDia}
+          title="Avance del mes"
+          value={porcentajeAvance}
           icon={
             <DataSaverOffIcon
               sx={{ color: theme.palette.secondary[300], fontSize: "26px" }}
@@ -185,7 +266,7 @@ const Dashboard = () => {
         />
 
         {/* ROW 2 */}
-        <Box
+        {/* <Box
           gridColumn="span 8"
           gridRow="span 3"
           sx={{
@@ -220,30 +301,52 @@ const Dashboard = () => {
             rows={(data ? data.sumaryByStation : []) || []}
             columns={columns}
           />
-        </Box>
+        </Box> */}
         <Box
-          gridColumn="span 4"
-          gridRow="span 3"
+          gridColumn="span 9"
+          gridRow="span 2"
           backgroundColor={theme.palette.background.alt}
-          p="1.5rem"
+          p="1rem"
           borderRadius="0.55rem"
         >
-          <Typography variant="h6" sx={{ color: theme.palette.secondary[100] }}>
-            Sales By Category
-          </Typography>
-          <BreakdownChart isDashboard={true} />
           <Typography
-            p="0 0.6rem"
-            fontSize="0.8rem"
-            sx={{ color: theme.palette.secondary[200] }}
+            variant="h6"
+            sx={{ textAlign: "center" }}
+            color={theme.palette.secondary[400]}
           >
-            Breakdown of real states and information via category for revenue
-            made for this year and total sales.
+            Desempeño Hrs por estación
           </Typography>
+          <PerformanceChart
+            view="sales"
+            isDashboard={true}
+            data={data ? data.sumaryByStation : []}
+            isLoading={isLoading}
+          />
+        </Box>
+        <Box
+          gridColumn="span 9"
+          gridRow="span 2"
+          backgroundColor={theme.palette.background.alt}
+          p="1rem"
+          borderRadius="0.55rem"
+        >
+          <Typography
+            variant="h6"
+            sx={{ textAlign: "center" }}
+            color={theme.palette.secondary[400]}
+          >
+            Porcentaje de Piezas producidas por estación
+          </Typography>
+          <PercentageUnitsProducedChart
+            view="sales"
+            isDashboard={true}
+            data={data ? data.sumaryByStation : []}
+            isLoading={isLoading}
+          />
         </Box>
       </Box>
     </Box>
   );
 };
 
-export default Dashboard;
+export default HomeDashboard;

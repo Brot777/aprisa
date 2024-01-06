@@ -9,13 +9,16 @@ export const api = createApi({
       query: (dateToday) =>
         `dashboard/basic-data${dateToday ? `?fecha=${dateToday}` : ""}`,
       providesTags: ["basicData"],
-      keepUnusedDataFor: 0,
     }),
     getProductionMonth: build.query({
       query: (dateToday) =>
         `dashboard/production-month${dateToday ? `?fecha=${dateToday}` : ""}`,
       providesTags: ["basicData"],
-      keepUnusedDataFor: 0,
+    }),
+    getWeekMetallic: build.query({
+      query: (dateToday) =>
+        `dashboard/week-metallic${dateToday ? `?fecha=${dateToday}` : ""}`,
+      providesTags: ["basicData"],
     }),
     getUser: build.query({
       query: (id) => `general/user/${id}`,
@@ -73,4 +76,5 @@ export const {
   useGetBasicDataQuery,
   useLazyGetBasicDataQuery,
   useLazyGetProductionMonthQuery,
+  useLazyGetWeekMetallicQuery,
 } = api;

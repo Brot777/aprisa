@@ -1,25 +1,22 @@
-import sql from 'mssql';
+import sql from "mssql";
 
 const config = {
-    user: 'sa',
-    password: 'Aprisa2014',
-    server: '192.168.2.4', // reemplaza esto con la IP de tu servidor
-    database: 'y',
-    port: 49264, // esto es opcional, por defecto toma el puerto 1433
-    options: {
-        encrypt: false // esto es opcional, por defecto es false
-    }
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  server: process.env.DB_SERVER, // IP servidor
+  database: process.env.DB_DATABASE,
+  port: Number(process.env.DB_PORT), // puerto, por defecto toma el puerto 1433
+  options: {
+    encrypt: false, // esto es opcional, por defecto es false
+  },
 };
 
-
-
 export async function getConnection() {
-    try {
-        const pool = await sql.connect(config);
-        return pool
-    } catch (error) {
-        console.error('Error en la consulta SQL:', error);
-        throw error;
-    }
+  try {
+    const pool = await sql.connect(config);
+    return pool;
+  } catch (error) {
+    console.error("Error en la consulta SQL:", error);
+    throw error;
+  }
 }
-

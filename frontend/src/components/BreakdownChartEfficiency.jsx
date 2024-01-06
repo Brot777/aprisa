@@ -2,45 +2,30 @@ import React from "react";
 import { ResponsivePie } from "@nivo/pie";
 import { Box, Typography, useTheme } from "@mui/material";
 
-const BreakdownChart = ({ maquina = {}, index }) => {
-  console.log(maquina);
+const BreakdownChartEfficiency = ({ maquina = {}, index }) => {
+  console.log(maquina.eficienciadiaria);
   const theme = useTheme();
   const formattedData = [
     {
-      id: "Producido",
-      label: "Producido",
-      value: (
-        (Number(maquina.cantrealtotal) /
-          Number(maquina.cantidadProyectadaTotalEstacion)) *
-        100
-      ).toFixed(0),
+      id: "Eficiencia",
+      label: "Eficiencia",
+      value: Number(maquina.eficienciadiaria).toFixed(0),
       color: theme.palette.secondary[500],
     },
     {
       id: "Faltante",
       label: "Faltante",
-      value: (
-        (1 -
-          Number(maquina.cantrealtotal) /
-            Number(maquina.cantidadProyectadaTotalEstacion)) *
-        100
-      ).toFixed(0),
+      value: (100 - Number(maquina.eficienciadiaria)).toFixed(0),
       color: theme.palette.secondary[300],
     },
   ];
 
   return (
     <Box mt="20px">
-      <Typography
-        variant="h6"
-        sx={{ textAlign: "center" }}
-        color={theme.palette.secondary[100]}
-        fontWeight="bold"
-      >{`${index + 1}. ${maquina.est_nombre}`}</Typography>
       <Box
         display="flex"
         width="100%"
-        height="180px"
+        height="170px"
         backgroundColor={theme.palette.background.alt}
         position="relative"
       >
@@ -79,11 +64,11 @@ const BreakdownChart = ({ maquina = {}, index }) => {
               },
             },
           }}
-          valueFormat={(v) => `${v}%`}
+          valueFormat={(v) => ""}
           colors={{ datum: "data.color" }}
           margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
           sortByValue={false}
-          innerRadius={0.75}
+          innerRadius={0.8}
           activeOuterRadiusOffset={2}
           borderWidth={1}
           borderColor={{
@@ -110,15 +95,26 @@ const BreakdownChart = ({ maquina = {}, index }) => {
             width: "100%",
             height: "100%",
             display: "flex",
+            flexDirection: "column",
             justifyContent: "center",
             alignItems: "center",
           }}
         >
-          <Typography variant="h7">{`${maquina.cantrealtotal}/${maquina.cantidadProyectadaTotalEstacion}`}</Typography>
+          <Typography
+            variant="h4"
+            color={theme.palette.secondary[100]}
+          >{`${Number(maquina.eficienciadiaria).toFixed(0)}%`}</Typography>
+          <Typography
+            variant="h6"
+            fontWeight="bold"
+            color={theme.palette.secondary[100]}
+          >
+            {maquina.est_nombre}
+          </Typography>
         </Box>
       </Box>
     </Box>
   );
 };
 
-export default BreakdownChart;
+export default BreakdownChartEfficiency;

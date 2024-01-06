@@ -67,8 +67,11 @@ export const getBasicData = async (req, res) => {
       let eficienciat2 = 0;
 
       let finactual;
+      //hora maxima y minima por estacion para el calculo del tiempo muerto
+      let horaMaxima = fecha;
+      let horaMinima = fecha;
 
-      console.log(est_nombre);
+      /*   console.log(est_nombre); */
       arrayDataEstacion.forEach((maquina) => {
         /* INICIAL DATA MAQUINA */
         const {
@@ -193,20 +196,44 @@ export const getBasicData = async (req, res) => {
 
         //calculo tendencia
         if (opest_hii && opest_hff) {
-          const horaInicioEntero = Number(
-            opest_hii.split(" ")[1].split(":")[0]
-          );
-          const horaFinalEntero = Number(opest_hff.split(" ")[1].split(":")[0]);
-          const date_opest_hii = new Date(opest_hii);
-          const date_opest_hff = new Date(opest_hff);
-          const horasTrabajadasMilisegundos =
-            date_opest_hff.getTime() - date_opest_hii.getTime();
-          const horasTrabajadas = horasTrabajadasMilisegundos / (3600 * 1000);
-          const horasTrabajadasEnteras = Math.floor(horasTrabajadas);
-          //velocidad de produccion
+          const diaActual = Number(fecha.split("/")[1]);
+          const diaInicio = Number(opest_hii.split(" ")[0].split("-")[2]);
+          const diaFinal = Number(opest_hff.split(" ")[0].split("-")[2]);
+
+          let [horaInicio, minutosInicio, segundosInicio] = opest_hii
+            .split(" ")[1]
+            .split(":");
+          let [horaFinal, minutosFinal, segundosFinal] = opest_hff
+            .split(" ")[1]
+            .split(":");
+
+          let horaInicioEntero = Number(horaInicio);
+          let horaFinalEntero = Number(horaFinal);
+
+          let segundosTotalInicio =
+            Number(minutosInicio) * 60 + Number(segundosInicio);
+          let HorasReajusteInicio = segundosTotalInicio / 3600;
+          let segundosTotalFinal =
+            Number(minutosFinal) * 60 + Number(segundosFinal);
+          let HorasReajusteFinal = segundosTotalFinal / 3600;
+
           let velocidadProduccion = 0;
-          if (horasTrabajadas != 0) {
-            velocidadProduccion = Number(opest_cantr) / horasTrabajadas;
+          if (horasr) {
+            //coversion horasr (segundo) a horas por eso la multiplicacion de 3600
+            velocidadProduccion = (Number(opest_cantr) * 3600) / horasr;
+          }
+
+          //validando que sean hora del dia actual y quitando las que no
+          if (diaActual > diaInicio) {
+            horaInicioEntero = 0;
+            HorasReajusteInicio = 0; //cero segundos
+          }
+
+          if (diaActual < diaFinal) {
+            /*  const [mes, dia, año] = fecha.split("/");
+            date_opest_hff = new Date(`${año}-${mes}-${dia} 23:59:59`); */
+            horaFinalEntero = 23;
+            HorasReajusteFinal = 1; //un segundo menos que la hora
           }
 
           //añadiendo velocidades por horas trabajadas al array de tendencia
@@ -214,8 +241,12 @@ export const getBasicData = async (req, res) => {
           for (let i = horaInicioEntero; i < horaFinalEntero; i++) {
             tendenciaProduccionPorHora[i] += velocidadProduccion;
           }
+
+          //ajuste produccion real primera y ultima hora
           tendenciaProduccionPorHora[horaFinalEntero] +=
-            velocidadProduccion * (horasTrabajadas - horasTrabajadasEnteras);
+            velocidadProduccion * HorasReajusteFinal;
+          tendenciaProduccionPorHora[horaInicioEntero] -=
+            velocidadProduccion * HorasReajusteInicio;
         }
         //fin calculo tendencia
       });
@@ -281,10 +312,11 @@ export const getBasicData = async (req, res) => {
         totalalertas,
         totalmuerto,
         porcetajeProduccionPorEstacion,
+        cantrealtotal,
+        cantidadProyectadaTotalEstacion,
       };
     });
     const sumaryByStation = await Promise.all(arrayPromisesStations);
-    /*  console.log(sumaryByStation); */
 
     eficienciaplanta = eficienciaplantasuma / cantrealdía;
 
@@ -309,40 +341,139 @@ export const getProductionMonth = async (req, res) => {
   const fecha =
     req.query.fecha || moment().tz("America/Guatemala").format("MM/DD/YYYY");
   console.log({ fecha });
+  const obtenerCantidadDiasMes = () => {
+    // Obtén la fecha en formato ISO
+    const fechaActual = new Date(fecha);
+
+    // Obtén el mes actual
+    let mesActual = fechaActual.getMonth();
+
+    // Incrementa el mes en 1 para obtener el siguiente mes
+    mesActual++;
+
+    // Configura la fecha al primer día del siguiente mes
+    fechaActual.setMonth(mesActual, 1);
+
+    // Retrocede un día para obtener el último día del mes actual
+    fechaActual.setDate(fechaActual.getDate() - 1);
+
+    // Obtiene el día del mes y retornar
+    return fechaActual.getDate();
+  };
   try {
     const pool = await getConnection();
     const dataProduccion = await pool
       .request()
       .input("fecha", sql.NVarChar, fecha)
       .query(
-        `SELECT DAY(opest_fecha) as dia,opest_fecha, MONTH(opest_fecha) as month, SUM(CONVERT(INT, opest_cantr)) as produccionDia FROM opestxestacion WHERE MONTH(opest_fecha)=MONTH(@fecha) AND YEAR(opest_fecha)=YEAR(@fecha) GROUP BY opest_fecha`
+        `SELECT DAY(opest_fecha) as dia,opest_fecha, COUNT(DISTINCT est_id) as CantidadMaquinasDia, SUM(CONVERT(INT, opest_cantr)) as produccionDia,SUM(CONVERT(INT, opest_cantp)) as produccionProyectadaDia FROM opestxestacion WHERE MONTH(opest_fecha)=MONTH(@fecha) AND YEAR(opest_fecha)=YEAR(@fecha) GROUP BY opest_fecha`
       );
-    const dataProyectado = await pool
-      .request()
-      .input("fecha", sql.NVarChar, fecha)
-      .query(
-        `SELECT SUM(CONVERT(INT, opest_cantp)) as produccionProyectadaMes FROM opestxestacion WHERE MONTH(opest_fecha)=MONTH(@fecha) AND YEAR(opest_fecha)=YEAR(@fecha)`
-      );
-    const produccionMesPorDia = dataProduccion.recordset.map((dataDia) => {
+
+    const diasDelMes = obtenerCantidadDiasMes();
+    const produccionPorDefecto = [];
+    for (let i = 0; i < diasDelMes; i++) {
+      const [mes, dia, año] = fecha.split("/");
+      produccionPorDefecto.push({
+        dia: i + 1,
+        opest_fecha: `${mes}/${i + 1 > 9 ? i + 1 : "0" + (i + 1)}/${año}`,
+        CantidadMaquinasDia: 0,
+        produccionDia: 0,
+        produccionProyectadaDia: 0,
+      });
+    }
+    dataProduccion.recordset.forEach((dataDia) => {
+      const indicePorReemplazar = dataDia.dia - 1;
+      produccionPorDefecto[indicePorReemplazar] = dataDia;
+    });
+    const produccionMesPorDia = produccionPorDefecto.map((dataDia) => {
       return dataDia.produccionDia ? dataDia : { ...dataDia, produccionDia: 0 };
     });
-    const { produccionProyectadaMes } = dataProyectado.recordsets[0][0];
 
-    res.json({ produccionMesPorDia, produccionProyectadaMes });
+    res.json({
+      produccionMesPorDia,
+    });
   } catch (error) {
     console.error("Error en la consulta SQL:", error);
     res.status(500).send("Error en la base de datos");
   }
 };
 
-const vistaTablas = (req, res) => {
-  res.render("tables");
-};
+export const getDataWeekMetallic = async (req, res) => {
+  const fecha =
+    req.query.fecha || moment().tz("America/Guatemala").format("MM/DD/YYYY");
+  console.log({ fecha });
+  const obtenerFechasDeLaSemana = () => {
+    const today = new Date(fecha);
+    // Obtener el día de la semana
+    const currentDayOfWeek = today.getDay();
 
-const vistaNotificaciones = (req, res) => {
-  res.render("notificaciones");
-};
+    // Crear una nueva fecha restando los días que han pasado desde el domingo
+    const previusSunday = new Date(
+      today.getTime() - currentDayOfWeek * 24 * 60 * 60 * 1000
+    );
+    const fechasSemana = [];
+    for (let i = 0; i < 7; i++) {
+      //obtener el dia de la fecha por cada dia de la semana
+      const diaDate = new Date(
+        previusSunday.getTime() + i * 24 * 60 * 60 * 1000
+      );
+      fechasSemana.push(diaDate.getDate());
+    }
+    return fechasSemana;
+  };
 
-const vistaMetalico = (req, res) => {
-  res.render("metalico");
+  try {
+    const pool = await getConnection();
+    const dataProduccion = await pool
+      .request()
+      .input("fecha", sql.NVarChar, fecha)
+      .query(
+        `SELECT opest_fecha,DATEPART(dw,opest_fecha) as diaSemana, COUNT(DISTINCT est_id) as CantidadMaquinasDia, SUM(CONVERT(INT, opest_cantr)) as produccionDia,SUM(CONVERT(INT, opest_cantp)) as produccionProyectadaDia FROM opestxestacion WHERE DATEPART(WEEK, opest_fecha)=DATEPART(WEEK, @fecha) AND YEAR(opest_fecha)=YEAR(@fecha) GROUP BY opest_fecha`
+      );
+    const fechasDeLaSemana = obtenerFechasDeLaSemana();
+    const produccionPorDefecto = [];
+    for (let i = 0; i < 7; i++) {
+      const [mes, dia, año] = fecha.split("/");
+      produccionPorDefecto.push({
+        opest_fecha: `${mes}/${
+          fechasDeLaSemana[1] > 9
+            ? fechasDeLaSemana[1]
+            : "0" + (fechasDeLaSemana[1] + 1)
+        }/${año}`,
+        diaSemana: i + 1,
+        CantidadMaquinasDia: 0,
+        produccionDia: 0,
+        produccionProyectadaDia: 0,
+      });
+    }
+    dataProduccion.recordset.forEach((dataDia) => {
+      const indicePorReemplazar = dataDia.diaSemana - 1;
+      produccionPorDefecto[indicePorReemplazar] = dataDia;
+    });
+
+    const produccionSemanaPorDia = produccionPorDefecto.map(
+      (dataDia, index) => {
+        const diasDeLaSemana = [
+          "Domingo",
+          "Lunes",
+          "Martes",
+          "Miércoles",
+          "Jueves",
+          "Viernes",
+          "Sábado",
+        ];
+        dataDia.dia = diasDeLaSemana[index];
+        return dataDia.produccionDia
+          ? dataDia
+          : { ...dataDia, produccionDia: 0 };
+      }
+    );
+
+    res.json({
+      produccionSemanaPorDia,
+    });
+  } catch (error) {
+    console.error("Error en la consulta SQL:", error);
+    res.status(500).send("Error en la base de datos");
+  }
 };

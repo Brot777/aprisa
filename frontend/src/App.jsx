@@ -5,7 +5,11 @@ import { useSelector } from "react-redux";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { themeSettings } from "./theme";
 import Layout from "./scenes/layout/index";
-import Dashboard from "./scenes/dashboard/index.jsx";
+import HomeDashboard from "./scenes/home_dashboard/index.jsx";
+import MetalicoDia from "./scenes/metalico_dia/index.jsx";
+import MetalicoSemana from "./scenes/metalico_semana/index.jsx";
+import MetalicoMes from "./scenes/metalico_mes/index.jsx";
+import MetalicoRendimiento from "./scenes/metalico_rendimiento/index.jsx";
 import Products from "./scenes/products/index.jsx";
 import Customers from "./scenes/customers//index.jsx";
 import Transactions from "./scenes/transactions/index.jsx";
@@ -27,18 +31,18 @@ function App() {
           <CssBaseline />
           <Routes>
             <Route element={<Layout />}>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/customers" element={<Customers />} />
-              <Route path="/transactions" element={<Transactions />} />
-              <Route path="/geography" element={<Geography />} />
-              <Route path="/overview" element={<Overview />} />
-              <Route path="/daily" element={<Daily />} />
-              <Route path="/monthly" element={<Monthly />} />
-              <Route path="/breakdown" element={<Breakdown />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/performance" element={<Performance />} />
+              <Route
+                path="/"
+                element={<Navigate to="/home-dashboard" replace />}
+              />
+              <Route path="/home-dashboard" element={<HomeDashboard />} />
+              <Route path="/metalico-dia" element={<MetalicoDia />} />
+              <Route path="/metalico-semana" element={<MetalicoSemana />} />
+              <Route path="/metalico-mes" element={<MetalicoMes />} />
+              <Route
+                path="/metalico-rendimiento"
+                element={<MetalicoRendimiento />}
+              />
             </Route>
           </Routes>
         </ThemeProvider>

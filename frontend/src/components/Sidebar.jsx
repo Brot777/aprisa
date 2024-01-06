@@ -1,7 +1,6 @@
 import React from "react";
 import {
   Box,
-  Divider,
   Drawer,
   IconButton,
   List,
@@ -13,82 +12,77 @@ import {
   useTheme,
 } from "@mui/material";
 import {
-  SettingsOutlined,
+  HomeOutlined,
   ChevronLeft,
   ChevronRightOutlined,
-  HomeOutlined,
-  ShoppingCartOutlined,
-  Groups2Outlined,
   ReceiptLongOutlined,
   PublicOutlined,
-  PointOfSaleOutlined,
   TodayOutlined,
-  CalendarMonthOutlined,
-  AdminPanelSettingsOutlined,
-  TrendingUpOutlined,
-  PieChartOutlined,
+  DateRange,
+  CalendarMonth,
 } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import FlexBetween from "./FlexBetween";
-import profileImage from "../assets/profile.jpeg";
 
 const navItems = [
   {
-    text: "Dashboard",
+    text: "home-dashboard",
     icon: <HomeOutlined />,
   },
   {
-    text: "Client Facing",
+    text: "METALICO",
     icon: null,
   },
   {
-    text: "Products",
-    icon: <ShoppingCartOutlined />,
-  },
-  {
-    text: "Customers",
-    icon: <Groups2Outlined />,
-  },
-  {
-    text: "Transactions",
-    icon: <ReceiptLongOutlined />,
-  },
-  {
-    text: "Geography",
-    icon: <PublicOutlined />,
-  },
-  {
-    text: "Sales",
-    icon: null,
-  },
-  {
-    text: "Overview",
-    icon: <PointOfSaleOutlined />,
-  },
-  {
-    text: "Daily",
+    text: "metalico-dia",
     icon: <TodayOutlined />,
   },
   {
-    text: "Monthly",
-    icon: <CalendarMonthOutlined />,
+    text: "metalico-semana",
+    icon: <DateRange />,
   },
   {
-    text: "Breakdown",
-    icon: <PieChartOutlined />,
+    text: "metalico-mes",
+    icon: <CalendarMonth />,
+  },
+
+  {
+    text: "metalico-rendimiento",
+    icon: <PublicOutlined />,
   },
   {
-    text: "Management",
+    text: "metalico-indicadores",
+    icon: <ReceiptLongOutlined />,
+  },
+  {
+    text: "PINTURA",
     icon: null,
   },
   {
-    text: "Admin",
-    icon: <AdminPanelSettingsOutlined />,
+    text: "pintura-dia",
+    icon: <TodayOutlined />,
   },
   {
-    text: "Performance",
-    icon: <TrendingUpOutlined />,
+    text: "pintura-semana",
+    icon: <DateRange />,
+  },
+  {
+    text: "pintura-mes",
+    icon: <CalendarMonth />,
+  },
+
+  {
+    text: "pintura-desempeño",
+    icon: <PublicOutlined />,
+  },
+  {
+    text: "pintura-produccion",
+    icon: <PublicOutlined />,
+  },
+  {
+    text: "pintura-indicadores",
+    icon: <ReceiptLongOutlined />,
   },
 ];
 
@@ -132,7 +126,7 @@ const Sidebar = ({
               <FlexBetween color={theme.palette.secondary.main}>
                 <Box display="flex" alignItems="center" gap="0.5rem">
                   <Typography variant="h4" fontWeight="bold">
-                    ECOMVISION
+                    APRISA
                   </Typography>
                 </Box>
                 {!isNonMobile && (
@@ -182,7 +176,10 @@ const Sidebar = ({
                       >
                         {icon}
                       </ListItemIcon>
-                      <ListItemText primary={text} />
+                      <ListItemText
+                        sx={{ textTransform: "capitalize" }}
+                        primary={text.split("-")[1]}
+                      />
                       {active === lcText && (
                         <ChevronRightOutlined sx={{ ml: "auto" }} />
                       )}
@@ -191,42 +188,6 @@ const Sidebar = ({
                 );
               })}
             </List>
-          </Box>
-
-          <Box position="absolute" bottom="2rem">
-            <Divider />
-            <FlexBetween textTransform="none" gap="1rem" m="1.5rem 2rem 0 3rem">
-              <Box
-                component="img"
-                alt="profile"
-                src={profileImage}
-                height="40px"
-                width="40px"
-                borderRadius="50%"
-                sx={{ objectFit: "cover" }}
-              />
-              <Box textAlign="left">
-                <Typography
-                  fontWeight="bold"
-                  fontSize="0.9rem"
-                  sx={{ color: theme.palette.secondary[100] }}
-                >
-                  {user.name}
-                </Typography>
-                <Typography
-                  fontSize="0.8rem"
-                  sx={{ color: theme.palette.secondary[200] }}
-                >
-                  {user.occupation}
-                </Typography>
-              </Box>
-              <SettingsOutlined
-                sx={{
-                  color: theme.palette.secondary[300],
-                  fontSize: "25px ",
-                }}
-              />
-            </FlexBetween>
           </Box>
         </Drawer>
       )}

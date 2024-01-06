@@ -1,29 +1,21 @@
-import { ResponsiveLine } from "@nivo/line";
+import { ResponsiveBar } from "@nivo/bar";
 import { useTheme } from "@mui/material";
 
-const TrendChart = ({
+const PerformanceChart = ({
   isDashboard = false,
   view,
   data,
   isLoading = true,
-  isFeaching = false,
 }) => {
   const theme = useTheme();
 
-  if (!data || isLoading || isFeaching) return "Loading...";
-
-  const arrayEficiencias = data.map((produccion, index) => {
-    return { x: index + ":00", y: produccion };
-  });
-  const dataGrafica = {
-    id: "trendProduction",
-    color: theme.palette.secondary[600],
-    data: arrayEficiencias,
-  };
+  if (!data || isLoading) return "Loading...";
 
   return (
-    <ResponsiveLine
-      data={[dataGrafica]}
+    <ResponsiveBar
+      data={data}
+      keys={["totalhr", "totalmuerto", "totalalertas"]}
+      indexBy="est_nombre"
       theme={{
         axis: {
           domain: {
@@ -57,8 +49,12 @@ const TrendChart = ({
           },
         },
       }}
-      margin={{ top: 15, right: 20, bottom: 80, left: 50 }}
-      xScale={{ type: "point" }}
+      /*   margin={{ top: 20, right: 20, bottom: 50, left: 50 }} */
+      margin={{ top: 20, right: 110, bottom: 120, left: 50 }}
+      padding={0.3}
+      valueScale={{ type: "linear" }}
+      indexScale={{ type: "band", round: false }}
+      enableLabel={false}
       yScale={{
         type: "linear",
         min: "auto",
@@ -68,17 +64,18 @@ const TrendChart = ({
       }}
       yFormat=" >-.2f"
       curve="catmullRom"
-      enableArea={isDashboard}
+      enableArea={true}
       axisTop={null}
       axisRight={null}
       axisBottom={{
+        /* format: (v) => {
+          if (isDashboard) return v.slice(0, 3);
+          return v;
+        }, */
         orient: "bottom",
         tickSize: 5,
         tickPadding: 5,
         tickRotation: -70,
-        legend: "Hora",
-        legendOffset: 55,
-        legendPosition: "middle",
       }}
       axisLeft={{
         orient: "left",
@@ -86,10 +83,8 @@ const TrendChart = ({
         tickSize: 5,
         tickPadding: 5,
         tickRotation: 0,
-        legend: isDashboard
-          ? ""
-          : `Total ${view === "sales" ? "Revenue" : "Units"} for Year`,
-        legendOffset: -60,
+        legend: "",
+        legendOffset: -50,
         legendPosition: "middle",
       }}
       enableGridX={false}
@@ -100,8 +95,32 @@ const TrendChart = ({
       pointBorderColor={{ from: "serieColor" }}
       pointLabelYOffset={-12}
       useMesh={true}
+      legends={[
+        {
+          dataFrom: "keys",
+          anchor: "bottom-right",
+          direction: "column",
+          justify: false,
+          translateX: 120,
+          translateY: 0,
+          itemsSpacing: 2,
+          itemWidth: 100,
+          itemHeight: 20,
+          itemDirection: "left-to-right",
+          itemOpacity: 0.85,
+          symbolSize: 20,
+          effects: [
+            {
+              on: "hover",
+              style: {
+                itemOpacity: 1,
+              },
+            },
+          ],
+        },
+      ]}
     />
   );
 };
 
-export default TrendChart;
+export default PerformanceChart;
