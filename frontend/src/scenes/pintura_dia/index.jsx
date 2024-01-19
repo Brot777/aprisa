@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import FlexBetween from "./../../components/FlexBetween";
-import Header from "./../../components/Header";
+import FlexBetween from "../../components/FlexBetween";
+import Header from "../../components/Header";
 import { Update, RadioButtonChecked } from "@mui/icons-material";
 import DataSaverOffIcon from "@mui/icons-material/DataSaverOff";
 import TodayIcon from "@mui/icons-material/Today";
@@ -12,10 +12,10 @@ import {
   FormControl,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import BreakdownChart from "./../../components/BreakdownChart";
+import BreakdownChart from "../../components/BreakdownChart";
 import TrendChart from "../../components/trendChart";
-import { useLazyGetDataDayMetallicQuery } from "./../../state/api";
-import StatBox from "./../../components/StatBox";
+import { useLazyGetDataDayPaintQuery } from "../../state/api";
+import StatBox from "../../components/StatBox";
 
 const MetalicoDia = () => {
   //estado de la fechca
@@ -24,7 +24,7 @@ const MetalicoDia = () => {
   const isNonMediumScreens = useMediaQuery("(min-width: 1200px)");
 
   const [getDataDashborad, { data, isLoading, isFetching }] =
-    useLazyGetDataDayMetallicQuery();
+    useLazyGetDataDayPaintQuery();
 
   const fechingData = async () => {
     let dateFormat = dateToday;
@@ -135,7 +135,7 @@ const MetalicoDia = () => {
           }
         />
         <Box
-          gridColumn="span 7"
+          gridColumn="span 10"
           gridRow="span 2"
           backgroundColor={theme.palette.background.alt}
           p="1rem"
@@ -158,45 +158,14 @@ const MetalicoDia = () => {
         </Box>
         <StatBox
           title="Maquinas activas del dia"
-          value={data ? data.sumaryByStation.length : "0"}
+          value={data ? data.totalMaquinasActivas : "0"}
           icon={
             <RadioButtonChecked
               sx={{ color: theme.palette.secondary[300], fontSize: "26px" }}
             />
           }
         />
-        <Box
-          gridColumn="span 3"
-          gridRow="span 6"
-          display="flex"
-          flexDirection="column"
-          justifyContent="start"
-          alignItems="center"
-          gap="10px"
-          p="1.25rem 1rem"
-          flex="1 1 100%"
-          backgroundColor={theme.palette.background.alt}
-          borderRadius="0.55rem"
-        >
-          <Typography
-            variant="h3"
-            sx={{ color: theme.palette.secondary[100], textAlign: "center" }}
-          >
-            Top 5 maquinas
-          </Typography>
 
-          <Typography
-            fontSize="0.8rem"
-            sx={{ color: theme.palette.secondary[200], textAlign: "center" }}
-          >
-            Mayor produccion.
-          </Typography>
-          <Box width="100%">
-            {getTopMaquinas().map((maquina, index) => (
-              <BreakdownChart maquina={maquina} key={index} index={index} />
-            ))}
-          </Box>
-        </Box>
         <StatBox
           title="Unidades solicitadas del dia"
           value={data ? data.cantidadProyectadaDia : "0"}
@@ -219,7 +188,7 @@ const MetalicoDia = () => {
 
         {/* ROW 2 */}
         <Box
-          gridColumn="span 9"
+          gridColumn="span 12"
           gridRow="span 3"
           sx={{ backgroundColor: theme.palette.background.alt, p: 2 }}
         >

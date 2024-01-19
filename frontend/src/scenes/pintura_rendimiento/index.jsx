@@ -4,8 +4,8 @@ import Header from "../../components/Header";
 import { Box, Typography, useTheme, useMediaQuery } from "@mui/material";
 
 import {
-  useLazyGetDataDayMetallicQuery,
-  useLazyGetDataMonthMetallicQuery,
+  useLazyGetDataDayPaintQuery,
+  useLazyGetDataMonthPaintQuery,
 } from "../../state/api";
 import PerformanceChart from "../../components/performanceChart";
 import PercentageUnitsProducedChart from "../../components/percentageUnitsProducedChart";
@@ -17,8 +17,7 @@ const MetalicoRendimiento = () => {
   const theme = useTheme();
   const isNonMediumScreens = useMediaQuery("(min-width: 1200px)");
 
-  const [getDataDashborad, { data, isLoading }] =
-    useLazyGetDataDayMetallicQuery();
+  const [getDataDashborad, { data, isLoading }] = useLazyGetDataDayPaintQuery();
 
   const fechingData = async () => {
     let dateFormat = dateToday;
@@ -135,7 +134,7 @@ const MetalicoRendimiento = () => {
         </Box> */}
         {/* ROW 1 */}
         <Box
-          gridColumn="span 9"
+          gridColumn="span 12"
           gridRow="span 2"
           backgroundColor={theme.palette.background.alt}
           p="1rem"
@@ -155,45 +154,10 @@ const MetalicoRendimiento = () => {
             isLoading={isLoading}
           />
         </Box>
-        <Box
-          gridColumn="span 3"
-          gridRow="span 4"
-          display="flex"
-          flexDirection="column"
-          justifyContent="start"
-          alignItems="center"
-          gap="10px"
-          p="1.25rem 1rem"
-          flex="1 1 100%"
-          backgroundColor={theme.palette.background.alt}
-          borderRadius="0.55rem"
-        >
-          <Typography
-            variant="h3"
-            sx={{ color: theme.palette.secondary[100], textAlign: "center" }}
-          >
-            Top 5 estaciones
-          </Typography>
 
-          <Typography
-            fontSize="0.8rem"
-            sx={{ color: theme.palette.secondary[200], textAlign: "center" }}
-          >
-            Mayor eficiencia.
-          </Typography>
-          <Box width="100%">
-            {getTopMaquinas().map((maquina, index) => (
-              <BreakdownChartEfficiency
-                maquina={maquina}
-                key={index}
-                index={index}
-              />
-            ))}
-          </Box>
-        </Box>
         {/* ROW 2 */}
         <Box
-          gridColumn="span 9"
+          gridColumn="span 12"
           gridRow="span 2"
           backgroundColor={theme.palette.background.alt}
           p="1rem"

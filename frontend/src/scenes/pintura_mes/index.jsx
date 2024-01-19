@@ -1,30 +1,30 @@
 import React, { useEffect, useState } from "react";
-import FlexBetween from "./../../components/FlexBetween";
-import Header from "./../../components/Header";
+import FlexBetween from "../../components/FlexBetween";
+import Header from "../../components/Header";
 import { Update, RadioButtonChecked } from "@mui/icons-material";
 import DataSaverOffIcon from "@mui/icons-material/DataSaverOff";
 import TodayIcon from "@mui/icons-material/Today";
-import {
-  Box,
-  Typography,
-  useTheme,
-  useMediaQuery,
-  FormControl,
-} from "@mui/material";
+import { Box, Typography, useTheme, useMediaQuery } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import BreakdownChart from "./../../components/BreakdownChart";
-import TrendChart from "../../components/trendChart";
-import { useLazyGetDataDayMetallicQuery } from "./../../state/api";
-import StatBox from "./../../components/StatBox";
+import BreakdownChart from "../../components/BreakdownChart";
+import {
+  useLazyGetDataDayPaintQuery,
+  useLazyGetDataMonthPaintQuery,
+} from "../../state/api";
+import StatBox from "../../components/StatBox";
+import ProductionMonthChart from "../../components/productionMonthChart";
 
-const MetalicoDia = () => {
+const MetalicoMes = () => {
   //estado de la fechca
   const [dateToday, setDateToday] = useState("");
   const theme = useTheme();
   const isNonMediumScreens = useMediaQuery("(min-width: 1200px)");
 
-  const [getDataDashborad, { data, isLoading, isFetching }] =
-    useLazyGetDataDayMetallicQuery();
+  const [getDataDashborad, { data, isLoading }] = useLazyGetDataDayPaintQuery();
+  const [
+    getDataProductionMonth,
+    { data: dataProductionMonth, isLoading: isLoadingProductionMonth },
+  ] = useLazyGetDataMonthPaintQuery();
 
   const fechingData = async () => {
     let dateFormat = dateToday;
@@ -34,19 +34,55 @@ const MetalicoDia = () => {
       console.log(dateFormat);
     }
     getDataDashborad(dateFormat);
+    getDataProductionMonth(dateFormat);
   };
 
-  const getPercentageToDate = () => {
-    let porcentajeAvanceDia = "0.00%";
-    if (data && data?.cantidadProyectadaDia != 0) {
-      porcentajeAvanceDia =
-        (
-          (data?.cantidadProducidaDia / data?.cantidadProyectadaDia) *
-          100
-        ).toFixed(2) + "%";
+  const getAccumulatedData = () => {
+    let porcentajeAvance = "0.00%";
+    let avanceProduccion = 0;
+    let totalProyectadoMes = 0;
+    let totalMaquinas = 0;
+    let promedioProduccionMes = 0;
+    if (!dataProductionMonth)
+      return {
+        promedioProduccionMes,
+        totalMaquinas,
+        totalProyectadoMes,
+        porcentajeAvance,
+      };
+
+    const maxDate = dataProductionMonth.produccionMesPorDia.length;
+    for (let i = 0; i < maxDate; i++) {
+      avanceProduccion +=
+        dataProductionMonth.produccionMesPorDia[i].produccionDia;
+      totalProyectadoMes +=
+        dataProductionMonth.produccionMesPorDia[i].produccionProyectadaDia;
+      totalMaquinas +=
+        dataProductionMonth.produccionMesPorDia[i].CantidadMaquinasDia;
     }
-    return porcentajeAvanceDia;
+
+    totalProyectadoMes != 0 &&
+      (porcentajeAvance =
+        ((avanceProduccion / totalProyectadoMes) * 100).toFixed(2) + "%");
+
+    dataProductionMonth.produccionMesPorDia.length != 0 &&
+      (promedioProduccionMes = (
+        avanceProduccion / dataProductionMonth.produccionMesPorDia.length
+      ).toFixed(0));
+
+    return {
+      promedioProduccionMes,
+      totalMaquinas,
+      totalProyectadoMes,
+      porcentajeAvance,
+    };
   };
+  const {
+    promedioProduccionMes,
+    totalMaquinas,
+    totalProyectadoMes,
+    porcentajeAvance,
+  } = getAccumulatedData();
 
   const getTopMaquinas = () => {
     let topMaquinas = [];
@@ -62,33 +98,28 @@ const MetalicoDia = () => {
 
   const columns = [
     {
-      field: "est_id",
-      headerName: "ID",
+      field: "dia",
+      headerName: "DIA",
       flex: 0.5,
     },
     {
-      field: "est_nombre",
-      headerName: "NOMBRE",
-      flex: 2,
-    },
-    {
-      field: "eficienciadiaria",
-      headerName: "EFICIENCIA",
+      field: "opest_fecha",
+      headerName: "FECHA",
       flex: 1,
     },
     {
-      field: "cantidadProyectadaTotalEstacion",
-      headerName: "SOLICITADAS",
+      field: "CantidadMaquinasDia",
+      headerName: "MAQUINAS ACTIVAS",
       flex: 1,
     },
     {
-      field: "cantrealtotal",
-      headerName: "PRODUCIDAS",
+      field: "produccionDia",
+      headerName: "PRODUCIDO",
       flex: 1,
     },
     {
-      field: "porcetajeProduccionPorEstacion",
-      headerName: "% PRODUCIDO",
+      field: "produccionProyectadaDia",
+      headerName: "PROYECTADO",
       flex: 1,
     },
   ];
@@ -102,13 +133,11 @@ const MetalicoDia = () => {
       <FlexBetween>
         <Header title="DASHBOARD" subtitle="Bienvenido a su dashboard" />
         <Box>
-          <FormControl sx={{ mt: "1rem" }}>
-            <input
-              type="Date"
-              onChange={(e) => setDateToday(e.target.value)}
-              value={dateToday}
-            />
-          </FormControl>
+          <input
+            type="Date"
+            onChange={(e) => setDateToday(e.target.value)}
+            value={dateToday}
+          />
         </Box>
       </FlexBetween>
 
@@ -124,10 +153,8 @@ const MetalicoDia = () => {
       >
         {/* ROW 1 */}
         <StatBox
-          title="Unidades producidas por hora"
-          value={
-            data ? (Number(data.cantidadProducidaDia) / 24).toFixed(0) : "0"
-          }
+          title="Promedio unidades por dia"
+          value={promedioProduccionMes}
           icon={
             <Update
               sx={{ color: theme.palette.secondary[300], fontSize: "26px" }}
@@ -135,7 +162,7 @@ const MetalicoDia = () => {
           }
         />
         <Box
-          gridColumn="span 7"
+          gridColumn="span 10"
           gridRow="span 2"
           backgroundColor={theme.palette.background.alt}
           p="1rem"
@@ -146,80 +173,48 @@ const MetalicoDia = () => {
             sx={{ textAlign: "center" }}
             color={theme.palette.secondary[100]}
           >
-            Tendencia de unidades por hora
+            Unidades producidas en el mes
           </Typography>
-          <TrendChart
+          <ProductionMonthChart
             view="sales"
             isDashboard={true}
-            data={data ? data.tendenciaProduccionPorHora : []}
-            isLoading={isLoading}
-            isFeaching={isFetching}
+            data={
+              dataProductionMonth ? dataProductionMonth.produccionMesPorDia : []
+            }
+            isLoading={isLoadingProductionMonth}
           />
         </Box>
         <StatBox
-          title="Maquinas activas del dia"
-          value={data ? data.sumaryByStation.length : "0"}
+          title="Maquinas activas del mes"
+          value={totalMaquinas}
           icon={
             <RadioButtonChecked
               sx={{ color: theme.palette.secondary[300], fontSize: "26px" }}
             />
           }
         />
-        <Box
-          gridColumn="span 3"
-          gridRow="span 6"
-          display="flex"
-          flexDirection="column"
-          justifyContent="start"
-          alignItems="center"
-          gap="10px"
-          p="1.25rem 1rem"
-          flex="1 1 100%"
-          backgroundColor={theme.palette.background.alt}
-          borderRadius="0.55rem"
-        >
-          <Typography
-            variant="h3"
-            sx={{ color: theme.palette.secondary[100], textAlign: "center" }}
-          >
-            Top 5 maquinas
-          </Typography>
 
-          <Typography
-            fontSize="0.8rem"
-            sx={{ color: theme.palette.secondary[200], textAlign: "center" }}
-          >
-            Mayor produccion.
-          </Typography>
-          <Box width="100%">
-            {getTopMaquinas().map((maquina, index) => (
-              <BreakdownChart maquina={maquina} key={index} index={index} />
-            ))}
-          </Box>
-        </Box>
         <StatBox
-          title="Unidades solicitadas del dia"
-          value={data ? data.cantidadProyectadaDia : "0"}
+          title="Unidades solicitadas del mes"
+          value={totalProyectadoMes}
           icon={
             <TodayIcon
               sx={{ color: theme.palette.secondary[300], fontSize: "26px" }}
             />
           }
         />
-
         <StatBox
-          title="% Avance del dia"
-          value={getPercentageToDate()}
+          title="% Avance del mes"
+          value={porcentajeAvance}
           icon={
             <DataSaverOffIcon
               sx={{ color: theme.palette.secondary[300], fontSize: "26px" }}
             />
           }
         />
-
         {/* ROW 2 */}
         <Box
-          gridColumn="span 9"
+          gridColumn="span 12"
           gridRow="span 3"
           sx={{ backgroundColor: theme.palette.background.alt, p: 2 }}
         >
@@ -231,8 +226,9 @@ const MetalicoDia = () => {
               textAlign: "center",
             }}
           >
-            Resumen del dia
+            Resumen del mes
           </Typography>
+
           <Box
             height="500px"
             sx={{
@@ -243,7 +239,6 @@ const MetalicoDia = () => {
                 backgroundColor: theme.palette.background.alt,
                 color: theme.palette.secondary[100],
               },
-
               "& .MuiDataGrid-footerContainer": {
                 backgroundColor: theme.palette.background.alt,
                 color: theme.palette.secondary[100],
@@ -254,9 +249,13 @@ const MetalicoDia = () => {
             }}
           >
             <DataGrid
-              loading={isLoading || !data}
-              getRowId={(row) => row.est_id}
-              rows={(data ? data.sumaryByStation : []) || []}
+              loading={isLoading || !dataProductionMonth}
+              getRowId={(row) => row.dia}
+              rows={
+                (dataProductionMonth
+                  ? dataProductionMonth.produccionMesPorDia
+                  : []) || []
+              }
               columns={columns}
             />
           </Box>
@@ -266,4 +265,4 @@ const MetalicoDia = () => {
   );
 };
 
-export default MetalicoDia;
+export default MetalicoMes;

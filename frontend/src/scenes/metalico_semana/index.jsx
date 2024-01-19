@@ -8,23 +8,24 @@ import { Box, Typography, useTheme, useMediaQuery } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import BreakdownChart from "../../components/BreakdownChart";
 import {
-  useLazyGetBasicDataQuery,
-  useLazyGetWeekMetallicQuery,
+  useLazyGetDataDayMetallicQuery,
+  useLazyGetDataWeekMetallicQuery,
 } from "../../state/api";
 import StatBox from "../../components/StatBox";
 import ProductionMonthChart from "../../components/productionMonthChart";
 
-const MetalicoMes = () => {
+const MetalicoSemana = () => {
   //estado de la fechca
   const [dateToday, setDateToday] = useState("");
   const theme = useTheme();
   const isNonMediumScreens = useMediaQuery("(min-width: 1200px)");
 
-  const [getDataDashborad, { data, isLoading }] = useLazyGetBasicDataQuery();
+  const [getDataDashborad, { data, isLoading }] =
+    useLazyGetDataDayMetallicQuery();
   const [
     getdataWeekMetallic,
     { data: dataWeekMetallic, isLoading: isLoadingWeekMetallic },
-  ] = useLazyGetWeekMetallicQuery();
+  ] = useLazyGetDataWeekMetallicQuery();
 
   const fechingData = async () => {
     let dateFormat = dateToday;
@@ -295,4 +296,4 @@ const MetalicoMes = () => {
   );
 };
 
-export default MetalicoMes;
+export default MetalicoSemana;

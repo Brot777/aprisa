@@ -10,16 +10,12 @@ import MetalicoDia from "./scenes/metalico_dia/index.jsx";
 import MetalicoSemana from "./scenes/metalico_semana/index.jsx";
 import MetalicoMes from "./scenes/metalico_mes/index.jsx";
 import MetalicoRendimiento from "./scenes/metalico_rendimiento/index.jsx";
-import Products from "./scenes/products/index.jsx";
-import Customers from "./scenes/customers//index.jsx";
-import Transactions from "./scenes/transactions/index.jsx";
-import Geography from "./scenes/geography/index.jsx";
-import Overview from "./scenes/overview/index.jsx";
-import Daily from "./scenes/daily/index.jsx";
-import Monthly from "./scenes/monthly/index.jsx";
-import Breakdown from "./scenes/breakdown/index.jsx";
-import Admin from "./scenes/admin/index.jsx";
-import Performance from "./scenes/performance/index.jsx";
+import MetalicoIndicadores from "./scenes/metalico_indicadores";
+import PinturaDia from "./scenes/pintura_dia/index.jsx";
+import PinturaSemana from "./scenes/pintura_semana/index.jsx";
+import PinturaMes from "./scenes/pintura_mes/index.jsx";
+import PinturaRendimiento from "./scenes/pintura_rendimiento/index.jsx";
+import PinturaIndicadores from "./scenes/pintura_indicadores/index.jsx";
 
 function App() {
   const mode = useSelector((state) => state.global.mode);
@@ -42,6 +38,21 @@ function App() {
               <Route
                 path="/metalico-rendimiento"
                 element={<MetalicoRendimiento />}
+              />
+              <Route
+                path="/metalico-indicadores"
+                element={<MetalicoIndicadores />}
+              />
+              <Route path="/pintura-dia" element={<PinturaDia />} />
+              <Route path="/pintura-semana" element={<PinturaSemana />} />
+              <Route path="/pintura-mes" element={<PinturaMes />} />
+              <Route
+                path="/pintura-rendimiento"
+                element={<PinturaRendimiento />}
+              />
+              <Route
+                path="/pintura-indicadores"
+                element={<PinturaIndicadores />}
               />
             </Route>
           </Routes>

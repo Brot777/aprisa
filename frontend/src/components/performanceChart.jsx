@@ -68,10 +68,6 @@ const PerformanceChart = ({
       axisTop={null}
       axisRight={null}
       axisBottom={{
-        /* format: (v) => {
-          if (isDashboard) return v.slice(0, 3);
-          return v;
-        }, */
         orient: "bottom",
         tickSize: 5,
         tickPadding: 5,

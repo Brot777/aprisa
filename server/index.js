@@ -5,8 +5,8 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import "dotenv/config";
 import morgan from "morgan";
-import dashboardRoutes from "./routes/dashboard.js";
-import { getBasicData } from "./controllers/dashboard.js";
+import metallicRoutes from "./routes/metallic.js";
+import paintRoutes from "./routes/paint.js";
 
 /* CONFIGURATION */
 const app = express();
@@ -17,17 +17,18 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 
 /* ROUTES */
-app.use("/dashboard", dashboardRoutes);
+app.use("/api/metallic", metallicRoutes);
+app.use("/api/paint", paintRoutes);
 
 /* STATIC FILES */
-/* const __dirname = dirname(fileURLToPath(import.meta.url));
-const urlStatic = join(__dirname, "dist");
-app.use(express.static(urlStatic)); */
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const urlStatic = join(__dirname, "/dist");
+app.use(express.static(urlStatic));
 
 /* REDIRECT PAGES */
-/* app.get("*", (req, res) => {
-  res.sendFile(join(__dirname, "dist/index.html"));
-}); */
+app.get("*", (req, res) => {
+  res.sendFile(join(__dirname, "/dist/index.html"));
+});
 
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 9000;

@@ -73,11 +73,7 @@ const navItems = [
   },
 
   {
-    text: "pintura-desempeño",
-    icon: <PublicOutlined />,
-  },
-  {
-    text: "pintura-produccion",
+    text: "pintura-rendimiento",
     icon: <PublicOutlined />,
   },
   {
@@ -87,7 +83,6 @@ const navItems = [
 ];
 
 const Sidebar = ({
-  user,
   drawerWidth,
   isSidebarOpen,
   setIsSidebarOpen,

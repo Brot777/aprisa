@@ -1,9 +1,8 @@
 import { getConnection } from "../sql/conectar.js";
 import sql from "mssql";
-import { convertToShortDate } from "../utils/convetDate.js";
 import moment from "moment-timezone";
 
-export const getBasicData = async (req, res) => {
+export const getDataDay = async (req, res) => {
   const fecha =
     req.query.fecha || moment().tz("America/Guatemala").format("MM/DD/YYYY");
   console.log({ fecha });
@@ -16,7 +15,9 @@ export const getBasicData = async (req, res) => {
         "SELECT * FROM rts WHERE opest_fecha= @fecha order by dep_id, est_nombre"
       );
 
-    const arrayDataToday = data.recordset;
+    const arrayDataToday = data.recordset.filter(
+      (estacion) => estacion.est_id != 36
+    );
 
     /* VARIABLES GLOBALES */
     let eficienciaplanta = 0;
@@ -72,6 +73,12 @@ export const getBasicData = async (req, res) => {
       let horaMinima = fecha;
 
       /*   console.log(est_nombre); */
+      //odenando por fecha de inicio
+      arrayDataEstacion.sort((a, b) => {
+        const dateA = new Date(a.opest_hii);
+        const dateB = new Date(b.opest_hii);
+        return dateA.getTime() - dateB.getTime();
+      });
       arrayDataEstacion.forEach((maquina) => {
         /* INICIAL DATA MAQUINA */
         const {
@@ -152,11 +159,12 @@ export const getBasicData = async (req, res) => {
         if (!finactual) {
           finactual = opest_hii;
         }
-
+        const date_opest_hii = new Date(opest_hii);
+        const date_finalactual = new Date(finactual);
         let muerto = 0;
-        if (opest_hii != "") {
-          const date_opest_hii = new Date(opest_hii);
-          const date_finalactual = new Date(finactual);
+        if (date_finalactual.getTime() > date_opest_hii.getTime()) {
+          finactual = opest_hff;
+        } else if (opest_hii != "") {
           let muertoMilisegundos =
             date_opest_hii.getTime() - date_finalactual.getTime();
           muerto = muertoMilisegundos / (3600 * 1000);
@@ -228,12 +236,23 @@ export const getBasicData = async (req, res) => {
             horaInicioEntero = 0;
             HorasReajusteInicio = 0; //cero segundos
           }
+          if (diaActual < diaInicio) {
+            horaInicioEntero = 0;
+            HorasReajusteInicio = 0; //cero segundos
+          }
 
           if (diaActual < diaFinal) {
-            /*  const [mes, dia, año] = fecha.split("/");
-            date_opest_hff = new Date(`${año}-${mes}-${dia} 23:59:59`); */
-            horaFinalEntero = 23;
-            HorasReajusteFinal = 1; //un segundo menos que la hora
+            if (diaFinal == diaActual + 1) {
+              horaFinalEntero = 23;
+              HorasReajusteFinal = 1; //un segundo menos que la hora
+            } else {
+              horaFinalEntero = 0;
+              HorasReajusteFinal = 0; //cero segundos
+            }
+          }
+          if (diaActual > diaFinal) {
+            horaFinalEntero = 0;
+            HorasReajusteFinal = 0; //cero segundos
           }
 
           //añadiendo velocidades por horas trabajadas al array de tendencia
@@ -248,6 +267,7 @@ export const getBasicData = async (req, res) => {
           tendenciaProduccionPorHora[horaInicioEntero] -=
             velocidadProduccion * HorasReajusteInicio;
         }
+
         //fin calculo tendencia
       });
 
@@ -337,7 +357,7 @@ export const getBasicData = async (req, res) => {
   }
 };
 
-export const getProductionMonth = async (req, res) => {
+export const getDataMonth = async (req, res) => {
   const fecha =
     req.query.fecha || moment().tz("America/Guatemala").format("MM/DD/YYYY");
   console.log({ fecha });
@@ -366,7 +386,7 @@ export const getProductionMonth = async (req, res) => {
       .request()
       .input("fecha", sql.NVarChar, fecha)
       .query(
-        `SELECT DAY(opest_fecha) as dia,opest_fecha, COUNT(DISTINCT est_id) as CantidadMaquinasDia, SUM(CONVERT(INT, opest_cantr)) as produccionDia,SUM(CONVERT(INT, opest_cantp)) as produccionProyectadaDia FROM opestxestacion WHERE MONTH(opest_fecha)=MONTH(@fecha) AND YEAR(opest_fecha)=YEAR(@fecha) GROUP BY opest_fecha`
+        `SELECT DAY(opest_fecha) as dia,opest_fecha, COUNT(DISTINCT est_id) as CantidadMaquinasDia, SUM(CONVERT(INT, opest_cantr)) as produccionDia,SUM(CONVERT(INT, opest_cantp)) as produccionProyectadaDia FROM opestxestacion WHERE MONTH(opest_fecha)=MONTH(@fecha) AND YEAR(opest_fecha)=YEAR(@fecha) AND est_id <> 36 GROUP BY opest_fecha`
       );
 
     const diasDelMes = obtenerCantidadDiasMes();
@@ -398,7 +418,7 @@ export const getProductionMonth = async (req, res) => {
   }
 };
 
-export const getDataWeekMetallic = async (req, res) => {
+export const getDataWeek = async (req, res) => {
   const fecha =
     req.query.fecha || moment().tz("America/Guatemala").format("MM/DD/YYYY");
   console.log({ fecha });
@@ -428,7 +448,7 @@ export const getDataWeekMetallic = async (req, res) => {
       .request()
       .input("fecha", sql.NVarChar, fecha)
       .query(
-        `SELECT opest_fecha,DATEPART(dw,opest_fecha) as diaSemana, COUNT(DISTINCT est_id) as CantidadMaquinasDia, SUM(CONVERT(INT, opest_cantr)) as produccionDia,SUM(CONVERT(INT, opest_cantp)) as produccionProyectadaDia FROM opestxestacion WHERE DATEPART(WEEK, opest_fecha)=DATEPART(WEEK, @fecha) AND YEAR(opest_fecha)=YEAR(@fecha) GROUP BY opest_fecha`
+        `SELECT opest_fecha,DATEPART(dw,opest_fecha) as diaSemana, COUNT(DISTINCT est_id) as CantidadMaquinasDia, SUM(CONVERT(INT, opest_cantr)) as produccionDia,SUM(CONVERT(INT, opest_cantp)) as produccionProyectadaDia FROM opestxestacion WHERE DATEPART(WEEK, opest_fecha)=DATEPART(WEEK, @fecha) AND YEAR(opest_fecha)=YEAR(@fecha) AND est_id <> 36 GROUP BY opest_fecha`
       );
     const fechasDeLaSemana = obtenerFechasDeLaSemana();
     const produccionPorDefecto = [];

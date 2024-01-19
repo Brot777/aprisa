@@ -8,8 +8,8 @@ import { Box, Typography, useTheme, useMediaQuery } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import BreakdownChart from "../../components/BreakdownChart";
 import {
-  useLazyGetBasicDataQuery,
-  useLazyGetProductionMonthQuery,
+  useLazyGetDataDayMetallicQuery,
+  useLazyGetDataMonthMetallicQuery,
 } from "../../state/api";
 import StatBox from "../../components/StatBox";
 import ProductionMonthChart from "../../components/productionMonthChart";
@@ -20,11 +20,12 @@ const MetalicoMes = () => {
   const theme = useTheme();
   const isNonMediumScreens = useMediaQuery("(min-width: 1200px)");
 
-  const [getDataDashborad, { data, isLoading }] = useLazyGetBasicDataQuery();
+  const [getDataDashborad, { data, isLoading }] =
+    useLazyGetDataDayMetallicQuery();
   const [
     getDataProductionMonth,
     { data: dataProductionMonth, isLoading: isLoadingProductionMonth },
-  ] = useLazyGetProductionMonthQuery();
+  ] = useLazyGetDataMonthMetallicQuery();
 
   const fechingData = async () => {
     let dateFormat = dateToday;
