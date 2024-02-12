@@ -7,6 +7,7 @@ import "dotenv/config";
 import morgan from "morgan";
 import metallicRoutes from "./routes/metallic.js";
 import paintRoutes from "./routes/paint.js";
+import generalRoutes from "./routes/general.js";
 
 /* CONFIGURATION */
 const app = express();
@@ -19,6 +20,7 @@ app.use(cors());
 /* ROUTES */
 app.use("/api/metallic", metallicRoutes);
 app.use("/api/paint", paintRoutes);
+app.use("/api/general", generalRoutes);
 
 /* STATIC FILES */
 const __dirname = dirname(fileURLToPath(import.meta.url));
